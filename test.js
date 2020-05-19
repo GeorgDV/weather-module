@@ -1,7 +1,12 @@
 const getWoeID = require('./src/getWoeID');
+const getWeatherInfo = require('./src/getWeatherInfo');
 
-let id = getWoeID('london');
-setTimeout(() => {
-    id = process.binding('util').getPromiseDetails(id)[1];
-    console.log(id);
-}, 500);
+test();
+
+async function test(){
+    let londonID = await getWoeID('london');
+    console.log('London WoeID: ', londonID);
+
+    let londonWeather = await getWeatherInfo(londonID);
+    console.log('London Weather: ', londonWeather);
+}

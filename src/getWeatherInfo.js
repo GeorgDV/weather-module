@@ -1,7 +1,7 @@
 const https = require('https');
 
-const request = async (city, postData) => {
-  const url = `https://www.metaweather.com/api/location/search/?query=${city}`;
+const request = async (woeid, postData) => {
+  const url = `https://www.metaweather.com/api/location/${woeid}/`;
 
   return new Promise((resolve, reject) => {
         const req = https.request(url, res => {
@@ -31,33 +31,32 @@ const request = async (city, postData) => {
     });
 };
 
-//FOR TESTING DIRECTLY
 /*
 (async () => {
-    let woeid = "";
+    let weatherInfo = "";
     try {
-        const data = await request('london');
-        console.log(data);
-        woeid = data[0].woeid;
+        const data = await request('44418');
+        //console.log(data);
+        weatherInfo = data.consolidated_weather[0];
     } catch (error) {
         console.error(error);
     }
-    console.log(woeid);
+    console.log(weatherInfo);
 })();
 */
 
-async function getWoeID(city){
-    let woeid = "";
+async function getWeatherInfo(woeid){
+    let weatherInfo = "";
 
     try {
-        const data = await request(city);
+        const data = await request(woeid);
         //console.log(data);
-        woeid = data[0].woeid;
+        weatherInfo = data.consolidated_weather[0];
     } catch (error) {
         console.error(error);
     }
 
     //console.log(woeid);
-    return woeid;
+    return weatherInfo;
 }
-module.exports = getWoeID;
+module.exports = getWeatherInfo;
