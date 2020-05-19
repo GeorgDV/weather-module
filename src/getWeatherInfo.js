@@ -31,6 +31,7 @@ const request = async (woeid, postData) => {
     });
 };
 
+//FOR TESTING DIRECTLY
 /*
 (async () => {
     let weatherInfo = "";
@@ -45,18 +46,24 @@ const request = async (woeid, postData) => {
 })();
 */
 
-async function getWeatherInfo(woeid){
+//woeID - Where On Earth ID - get via getWoeID
+//dayID - array id, dayIDs start from current day (0), range 0-5
+async function getWeatherInfo(woeID, dayID){
     let weatherInfo = "";
+    if (dayID > 5 || dayID < 0){
+        console.error("DayID must range between 0-5.");
+        return;
+    }
 
     try {
-        const data = await request(woeid);
+        const data = await request(woeID);
         //console.log(data);
-        weatherInfo = data.consolidated_weather[0];
+        weatherInfo = data.consolidated_weather[dayID];
     } catch (error) {
         console.error(error);
     }
 
-    //console.log(woeid);
+    //console.log(weatherInfo);
     return weatherInfo;
 }
 module.exports = getWeatherInfo;
