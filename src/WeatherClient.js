@@ -42,10 +42,12 @@ const getWeatherWithCache = async (city, day) => {
         weatherInfo = await getWeather(city, day);
 
         //UPDATE CACHE
+        await ensureCacheDirExists();
         await fs.writeFileSync(__dirname + '/cache/weatherInfoCache.txt', util.inspect(weatherInfo), 'utf-8');
         console.log('Updated Weather Info Cache!');
 
         //UPDATE CACHE TIMER
+        await ensureCacheTimerDirExists();
         weatherInfoCacheTimer = getNewCacheTimer(time, weatherInfoCacheTimer);
         await fs.writeFileSync(__dirname + '/cache/cacheTimers/weatherInfoCacheTimer.txt', weatherInfoCacheTimer, 'utf-8');
     }
@@ -71,10 +73,12 @@ const getTempWithCache = async (city, day) => {
         tempInfo = await getTemp(city, day);
 
         //UPDATE CACHE
+        ensureCacheDirExists();
         await fs.writeFileSync(__dirname + '/cache/tempCache.txt', util.inspect(tempInfo), 'utf-8');
         console.log('Updated Temperature Info Cache!');
 
         //UPDATE CACHE TIMER
+        ensureCacheTimerDirExists();
         tempCacheTimer = getNewCacheTimer(time, tempCacheTimer);
         await fs.writeFileSync(__dirname + '/cache/cacheTimers/tempCacheTimer.txt', tempCacheTimer, 'utf-8');
     }
@@ -167,3 +171,16 @@ async function updateCacheTimers() {
         tempCacheTimer = await fs.readFileSync(__dirname + '/cache/cacheTimers/tempCacheTimer.txt');
     }
 } 
+
+async function ensureCacheDirExists() {
+    if (await !fs.existsSync(__dirname + '/cache')){
+        await fs.mkdirSync(__dirname + '/cache');
+    }
+}
+
+async function ensureCacheTimerDirExists() {
+    if (await !fs.existsSync(__dirname +  '/cache/cacheTimers')){
+        console.log("Made cacheTimers dir");
+        await fs.mkdirSync(__dirname + '/cache/cacheTimers');
+    }
+}
