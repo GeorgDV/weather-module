@@ -1,8 +1,6 @@
-//const getWoeID = require('./src/getWoeID');
 const WeatherClient = require('./src/WeatherClient');
 
 test();
-
 async function test(){
     
     let londonID = await WeatherClient.getWoeID('london');
@@ -15,9 +13,9 @@ async function test(){
     console.log('London Temp: ', londonTemp);
     
 
-    let cachedWeatherInfo = await WeatherClient.getWeatherWithCache('london', 3);
+    let cachedWeatherInfo = await WeatherClient.getWeatherWithCache('london', 0);
     console.log('London weather info with cache: ', cachedWeatherInfo);
 
-    let cachedTempInfo = await WeatherClient.getTempWithCache('london', 2);
+    let cachedTempInfo = await WeatherClient.getTempWithCache('london', 0);
     console.log('London temp info with cache: ', cachedTempInfo);
 }
