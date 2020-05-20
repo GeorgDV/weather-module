@@ -8,7 +8,7 @@ const time = 900000;
 
 let weatherInfoCacheTimer = 0;
 let tempCacheTimer = 0;
-getCacheTimers();
+updateCacheTimers();
 
 //city - city name as full or partial string
 const getWoeID = async (city) => {
@@ -16,13 +16,11 @@ const getWoeID = async (city) => {
 
     try {
         const data = await WeatherRequests.getCityRequest(city);
-        //console.log(data);
         woeid = data[0].woeid;
     } catch (error) {
         console.error(error);
     }
 
-    //console.log(woeid);
     return woeid;
 }
 
@@ -32,16 +30,22 @@ const getWoeID = async (city) => {
 const getWeatherWithCache = async (city, day) => {
     const now = new Date().getTime();
     let weatherInfo = {};
+
     if (await fs.existsSync(__dirname + '/cache/weatherInfoCache.txt')) {
-        weatherInfo = await fs.readFileSync( __dirname + '/cache/weatherInfoCache.txt');
+        //GET DATA FROM CACHE
+        weatherInfo = await fs.readFileSync(__dirname + '/cache/weatherInfoCache.txt');
         weatherInfo = weatherInfo.toString('utf-8');
     }
-    
+
     if (weatherInfoCacheTimer < now) {
+        //GET NEW DATA FROM API
         weatherInfo = await getWeather(city, day);
+
+        //UPDATE CACHE
         await fs.writeFileSync(__dirname + '/cache/weatherInfoCache.txt', util.inspect(weatherInfo), 'utf-8');
         console.log('Updated Weather Info Cache!');
 
+        //UPDATE CACHE TIMER
         weatherInfoCacheTimer = getNewCacheTimer(time, weatherInfoCacheTimer);
         await fs.writeFileSync(__dirname + '/cache/cacheTimers/weatherInfoCacheTimer.txt', weatherInfoCacheTimer, 'utf-8');
     }
@@ -55,16 +59,22 @@ const getWeatherWithCache = async (city, day) => {
 const getTempWithCache = async (city, day) => {
     const now = new Date().getTime();
     let tempInfo = {};
+
     if (await fs.existsSync(__dirname + '/cache/tempCache.txt')) {
-        tempInfo = await fs.readFileSync( __dirname + '/cache/tempCache.txt');
+        //GET DATA FROM CACHE
+        tempInfo = await fs.readFileSync(__dirname + '/cache/tempCache.txt');
         tempInfo = tempInfo.toString('utf-8');
     }
-    
+
     if (tempCacheTimer < now) {
+        //GET NEW DATA FROM API
         tempInfo = await getTemp(city, day);
+
+        //UPDATE CACHE
         await fs.writeFileSync(__dirname + '/cache/tempCache.txt', util.inspect(tempInfo), 'utf-8');
         console.log('Updated Temperature Info Cache!');
 
+        //UPDATE CACHE TIMER
         tempCacheTimer = getNewCacheTimer(time, tempCacheTimer);
         await fs.writeFileSync(__dirname + '/cache/cacheTimers/tempCacheTimer.txt', tempCacheTimer, 'utf-8');
     }
@@ -86,13 +96,12 @@ const getWeather = async (city, day) => {
     try {
         let woeID = await getWoeID(city);
         const data = await WeatherRequests.getWeatherRequest(woeID);
-        //console.log(data);
         weatherInfo = {
             when: data.consolidated_weather[day].applicable_date,
             weather_state: data.consolidated_weather[day].weather_state_name,
             min_temp: data.consolidated_weather[day].min_temp,
             normal_temp: data.consolidated_weather[day].the_temp,
-            max_temp: data.consolidated_weather[day].max_temp,  
+            max_temp: data.consolidated_weather[day].max_temp,
             wind_direction: data.consolidated_weather[day].wind_direction_compass,
             wind_speed: data.consolidated_weather[day].wind_speed,
             air_pressure: data.consolidated_weather[day].air_pressure,
@@ -104,7 +113,6 @@ const getWeather = async (city, day) => {
         console.error(error);
     }
 
-    //console.log(weatherInfo);
     return weatherInfo;
 }
 
@@ -122,18 +130,16 @@ const getTemp = async (city, day) => {
     try {
         let woeID = await getWoeID(city);
         const data = await WeatherRequests.getWeatherRequest(woeID);
-        //console.log(data);
         tempInfo = {
             when: data.consolidated_weather[day].applicable_date,
             min_temp: data.consolidated_weather[day].min_temp,
             normal_temp: data.consolidated_weather[day].the_temp,
-            max_temp: data.consolidated_weather[day].max_temp  
-        } 
+            max_temp: data.consolidated_weather[day].max_temp
+        }
     } catch (error) {
         console.error(error);
     }
 
-    //console.log(weatherInfo);
     return tempInfo;
 }
 
@@ -152,42 +158,12 @@ function getNewCacheTimer(time, timer) {
     return timer
 }
 
-async function getCacheTimers(){
+async function updateCacheTimers() {
     if (await fs.existsSync(__dirname + '/cache/cacheTimers/weatherInfoCacheTimer.txt')) {
         weatherInfoCacheTimer = await fs.readFileSync(__dirname + '/cache/cacheTimers/weatherInfoCacheTimer.txt');
     }
+
     if (await fs.existsSync(__dirname + '/cache/cacheTimers/weatherInfoCacheTimer.txt')) {
         tempCacheTimer = await fs.readFileSync(__dirname + '/cache/cacheTimers/tempCacheTimer.txt');
     }
-
 } 
-
-//FOR TESTING DIRECTLY
-/*
-(async () => {
-    let woeid = "";
-    try {
-        const data = await getCityRequest('london');
-        console.log(data);
-        woeid = data[0].woeid;
-    } catch (error) {
-        console.error(error);
-    }
-    console.log(woeid);
-})();
-*/
-
-//FOR TESTING DIRECTLY
-/*
-(async () => {
-    let weatherInfo = "";
-    try {
-        const data = await getWeatherRequest('44418');
-        //console.log(data);
-        weatherInfo = data.consolidated_weather[0];
-    } catch (error) {
-        console.error(error);
-    }
-    console.log(weatherInfo);
-})();
-*/
