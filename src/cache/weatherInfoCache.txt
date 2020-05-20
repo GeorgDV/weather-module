@@ -1,0 +1,12 @@
+{
+  when: '2020-05-22',
+  weather_state: 'Heavy Cloud',
+  min_temp: 14.075,
+  normal_temp: 20.09,
+  max_temp: 21.265,
+  wind_direction: 'WSW',
+  wind_speed: 10.202714671905406,
+  air_pressure: 1017.5,
+  humidity: 50,
+  predictability: 71
+}
