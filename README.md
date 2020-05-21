@@ -3,7 +3,7 @@ Made via Metaweather Open API: [`https://www.metaweather.com/api/`](https://www.
 
 ## Guide/Usage
 
-1. Fork/Clone Repo => `git clone.https://github.com/GeorgDV/weather-module.git`.
+1. Fork/Clone Repo => `git clone https://github.com/GeorgDV/weather-module.git`.
 2. Install dependencies => `npm install`
 3. Run unit-tests via jest => `npm run test`.
 4. Test requests usage and caching with => `node test_usage.js`.
