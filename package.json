@@ -1,0 +1,25 @@
+{
+  "name": "weather-module",
+  "version": "1.0.0",
+  "description": "Made with Metaweather Open API: [`https://www.metaweather.com/api/`](https://www.metaweather.com/api/)",
+  "main": "test.js",
+  "scripts": {
+    "foobar": "echo \"Error: no foobar specified\"",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GeorgDV/weather-module.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GeorgDV/weather-module/issues"
+  },
+  "homepage": "https://github.com/GeorgDV/weather-module#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^26.0.1"
+  }
+}

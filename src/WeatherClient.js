@@ -1,14 +1,11 @@
-const https = require('https');
 const fs = require('fs');
-const util = require('util');
 const WeatherRequests = require('./WeatherRequests');
 
 //TIME SET TO UPDATE CACHE IN EVERY 15 MINUTES
 const time = 900000;
 
-let weatherInfoCacheTimer = 0;
-let tempCacheTimer = 0;
-updateCacheTimers();
+let cacheDir = __dirname + '/cache';
+let cacheTimersDir = __dirname + '/cache/cacheTimers';
 
 //city - city name as full or partial string
 const getWoeID = async (city) => {
@@ -24,32 +21,42 @@ const getWoeID = async (city) => {
     return woeid;
 }
 
-//city - city name as full or partial string
-//day - array id, days start from current day (0), range 0-5
-//woeID - Where On Earth ID - get via getWoeID
-const getWeatherWithCache = async (city, day) => {
+//city -string, city name as full or partial string
+//day - integer, array id, days start from current day (0), range 0-5
+//useTestCacheDirs - boolean, use when using tests cache directiories (used for testing)
+const getWeatherWithCache = async (city, day, useTestCacheDirs) => {
     const now = new Date().getTime();
-    let weatherInfo = {};
+    let weatherInfo = {is_cached_data: false};
 
-    if (await fs.existsSync(__dirname + '/cache/weatherInfoCache.txt')) {
-        //GET DATA FROM CACHE
-        weatherInfo = await fs.readFileSync(__dirname + '/cache/weatherInfoCache.txt');
-        weatherInfo = weatherInfo.toString('utf-8');
+    if (useTestCacheDirs === true){
+        cacheDir = __dirname + '/../tests/test-cache';
+        cacheTimersDir = __dirname + '/../tests/test-cache/test-cacheTimers';
     }
 
-    if (weatherInfoCacheTimer < now) {
+    await ensureDirExists(cacheDir);
+    await ensureDirExists(cacheTimersDir);
+    if (await fs.existsSync(cacheDir + '/weatherInfoCache.txt')) {
+        //GET DATA FROM CACHE
+        weatherInfo = await fs.readFileSync(cacheDir + '/weatherInfoCache.txt');
+        weatherInfo = JSON.parse(weatherInfo);
+        weatherInfo.is_cached_data = true;
+    }
+
+    let weatherInfoCacheTimer = await getCurrentCacheTimer(cacheTimersDir + '/weatherInfoCacheTimer.txt');;
+    if (weatherInfoCacheTimer < now && weatherInfo.is_cached_data === false) {
         //GET NEW DATA FROM API
         weatherInfo = await getWeather(city, day);
-
+        weatherInfo.is_cached_data = false;
+        
         //UPDATE CACHE
-        await ensureCacheDirExists();
-        await fs.writeFileSync(__dirname + '/cache/weatherInfoCache.txt', util.inspect(weatherInfo), 'utf-8');
+        weatherInfo = JSON.stringify(weatherInfo);
+        await fs.writeFileSync(cacheDir + '/weatherInfoCache.txt', weatherInfo);
+        weatherInfo = JSON.parse(weatherInfo);
         console.log('Updated Weather Info Cache!');
 
         //UPDATE CACHE TIMER
-        await ensureCacheTimerDirExists();
         weatherInfoCacheTimer = getNewCacheTimer(time, weatherInfoCacheTimer);
-        await fs.writeFileSync(__dirname + '/cache/cacheTimers/weatherInfoCacheTimer.txt', weatherInfoCacheTimer, 'utf-8');
+        await fs.writeFileSync(cacheTimersDir + '/weatherInfoCacheTimer.txt', weatherInfoCacheTimer, 'utf-8');
     }
 
     return weatherInfo;
@@ -57,30 +64,40 @@ const getWeatherWithCache = async (city, day) => {
 
 //city - city name as full or partial string
 //day - array id, days start from current day (0), range 0-5
-//woeID - Where On Earth ID - get via getWoeID
-const getTempWithCache = async (city, day) => {
+//useTestCacheDirs - boolean, use when using tests cache directiories (used for testing)
+const getTempWithCache = async (city, day, useTestCacheDirs) => {
     const now = new Date().getTime();
-    let tempInfo = {};
+    let tempInfo = {is_cached_data: false};
 
-    if (await fs.existsSync(__dirname + '/cache/tempCache.txt')) {
-        //GET DATA FROM CACHE
-        tempInfo = await fs.readFileSync(__dirname + '/cache/tempCache.txt');
-        tempInfo = tempInfo.toString('utf-8');
+    if (useTestCacheDirs === true){
+        cacheDir = __dirname + '/../tests/test-cache';
+        cacheTimersDir = __dirname + '/../tests/test-cache/test-cacheTimers';
     }
 
-    if (tempCacheTimer < now) {
+    await ensureDirExists(cacheDir);
+    await ensureDirExists(cacheTimersDir);
+    if (await fs.existsSync(cacheDir + '/tempCache.txt')) {
+        //GET DATA FROM CACHE
+        tempInfo = await fs.readFileSync(cacheDir + '/tempCache.txt');
+        tempInfo = JSON.parse(tempInfo);
+        tempInfo.is_cached_data = true;
+    }
+
+    let tempCacheTimer = await getCurrentCacheTimer(cacheTimersDir + '/tempCacheTimer.txt');
+    if (tempCacheTimer < now && tempInfo.is_cached_data === false) {
         //GET NEW DATA FROM API
         tempInfo = await getTemp(city, day);
-
+        tempInfo.is_cached_data = false;
+        
         //UPDATE CACHE
-        ensureCacheDirExists();
-        await fs.writeFileSync(__dirname + '/cache/tempCache.txt', util.inspect(tempInfo), 'utf-8');
+        tempInfo = JSON.stringify(tempInfo);
+        await fs.writeFileSync(cacheDir + '/tempCache.txt', tempInfo);
+        tempInfo = JSON.parse(tempInfo);
         console.log('Updated Temperature Info Cache!');
 
         //UPDATE CACHE TIMER
-        ensureCacheTimerDirExists();
         tempCacheTimer = getNewCacheTimer(time, tempCacheTimer);
-        await fs.writeFileSync(__dirname + '/cache/cacheTimers/tempCacheTimer.txt', tempCacheTimer, 'utf-8');
+        await fs.writeFileSync(cacheTimersDir + '/tempCacheTimer.txt', tempCacheTimer, 'utf-8');
     }
 
     return tempInfo;
@@ -148,39 +165,30 @@ const getTemp = async (city, day) => {
 }
 
 exports.getWoeID = getWoeID;
-exports.getWeatherWithCache = getWeatherWithCache;
 exports.getWeather = getWeather;
 exports.getTemp = getTemp;
+exports.getWeatherWithCache = getWeatherWithCache;
 exports.getTempWithCache = getTempWithCache;
 
 
 function getNewCacheTimer(time, timer) {
-    const now = new Date().getTime()
+    const now = new Date().getTime();
     if (timer < now + time) {
-        timer = now + time
+        timer = now + time;
     }
-    return timer
+    return timer;
 }
 
-async function updateCacheTimers() {
-    if (await fs.existsSync(__dirname + '/cache/cacheTimers/weatherInfoCacheTimer.txt')) {
-        weatherInfoCacheTimer = await fs.readFileSync(__dirname + '/cache/cacheTimers/weatherInfoCacheTimer.txt');
+async function getCurrentCacheTimer(cacheTimerPath) {
+    let cacheTimer = 0;
+    if (await fs.existsSync(cacheTimerPath)) {
+        cacheTimer = await fs.readFileSync(cacheTimerPath);
     }
-
-    if (await fs.existsSync(__dirname + '/cache/cacheTimers/weatherInfoCacheTimer.txt')) {
-        tempCacheTimer = await fs.readFileSync(__dirname + '/cache/cacheTimers/tempCacheTimer.txt');
-    }
+    return cacheTimer;
 } 
 
-async function ensureCacheDirExists() {
-    if (await !fs.existsSync(__dirname + '/cache')){
-        await fs.mkdirSync(__dirname + '/cache');
-    }
-}
-
-async function ensureCacheTimerDirExists() {
-    if (await !fs.existsSync(__dirname +  '/cache/cacheTimers')){
-        console.log("Made cacheTimers dir");
-        await fs.mkdirSync(__dirname + '/cache/cacheTimers');
+async function ensureDirExists(dir) {
+    if (await !fs.existsSync(dir)){
+        await fs.mkdirSync(dir);
     }
 }
