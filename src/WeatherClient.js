@@ -28,6 +28,11 @@ const getWeatherWithCache = async (city, day, useTestCacheDirs) => {
     const now = new Date().getTime();
     let weatherInfo = {is_cached_data: false};
 
+    if (day > 5 || day < 0 || day === null) {
+        console.error("Given DayID must range between 0-5.");
+        return;
+    }
+
     if (useTestCacheDirs === true){
         cacheDir = __dirname + '/../tests/test-cache';
         cacheTimersDir = __dirname + '/../tests/test-cache/test-cacheTimers';
@@ -35,14 +40,14 @@ const getWeatherWithCache = async (city, day, useTestCacheDirs) => {
 
     await ensureDirExists(cacheDir);
     await ensureDirExists(cacheTimersDir);
-    if (await fs.existsSync(cacheDir + '/weatherInfoCache.txt')) {
+    if (await fs.existsSync(cacheDir + '/' + city + '-' + day + '_WeatherInfoCache.txt')) {
         //GET DATA FROM CACHE
-        weatherInfo = await fs.readFileSync(cacheDir + '/weatherInfoCache.txt');
+        weatherInfo = await fs.readFileSync(cacheDir + '/' + city + '-' + day +'_WeatherInfoCache.txt');
         weatherInfo = JSON.parse(weatherInfo);
         weatherInfo.is_cached_data = true;
     }
 
-    let weatherInfoCacheTimer = await getCurrentCacheTimer(cacheTimersDir + '/weatherInfoCacheTimer.txt');;
+    let weatherInfoCacheTimer = await getCurrentCacheTimer(cacheTimersDir + '/' + city + '-' + day + '_WeatherInfoCacheTimer.txt');;
     if (weatherInfoCacheTimer < now && weatherInfo.is_cached_data === false) {
         //GET NEW DATA FROM API
         weatherInfo = await getWeather(city, day);
@@ -50,13 +55,13 @@ const getWeatherWithCache = async (city, day, useTestCacheDirs) => {
         
         //UPDATE CACHE
         weatherInfo = JSON.stringify(weatherInfo);
-        await fs.writeFileSync(cacheDir + '/weatherInfoCache.txt', weatherInfo);
+        await fs.writeFileSync(cacheDir + '/' + city + '-' + day + '_WeatherInfoCache.txt', weatherInfo);
         weatherInfo = JSON.parse(weatherInfo);
-        console.log('Updated Weather Info Cache!');
+        console.log('Updated ' + city + '-' + day + ' Weather Info Cache!');
 
         //UPDATE CACHE TIMER
         weatherInfoCacheTimer = getNewCacheTimer(time, weatherInfoCacheTimer);
-        await fs.writeFileSync(cacheTimersDir + '/weatherInfoCacheTimer.txt', weatherInfoCacheTimer, 'utf-8');
+        await fs.writeFileSync(cacheTimersDir + '/' + city + '-' + day + '_WeatherInfoCacheTimer.txt', weatherInfoCacheTimer, 'utf-8');
     }
 
     return weatherInfo;
@@ -69,6 +74,11 @@ const getTempWithCache = async (city, day, useTestCacheDirs) => {
     const now = new Date().getTime();
     let tempInfo = {is_cached_data: false};
 
+    if (day > 5 || day < 0 || day === null) {
+        console.error("Given DayID must range between 0-5.");
+        return;
+    }
+
     if (useTestCacheDirs === true){
         cacheDir = __dirname + '/../tests/test-cache';
         cacheTimersDir = __dirname + '/../tests/test-cache/test-cacheTimers';
@@ -76,14 +86,14 @@ const getTempWithCache = async (city, day, useTestCacheDirs) => {
 
     await ensureDirExists(cacheDir);
     await ensureDirExists(cacheTimersDir);
-    if (await fs.existsSync(cacheDir + '/tempCache.txt')) {
+    if (await fs.existsSync(cacheDir + '/' + city + '-' + day + '_TempCache.txt')) {
         //GET DATA FROM CACHE
-        tempInfo = await fs.readFileSync(cacheDir + '/tempCache.txt');
+        tempInfo = await fs.readFileSync(cacheDir + '/' + city + '-' + day + '_TempCache.txt');
         tempInfo = JSON.parse(tempInfo);
         tempInfo.is_cached_data = true;
     }
 
-    let tempCacheTimer = await getCurrentCacheTimer(cacheTimersDir + '/tempCacheTimer.txt');
+    let tempCacheTimer = await getCurrentCacheTimer(cacheTimersDir + '/' + city + '-' + day + '_TempCacheTimer.txt');
     if (tempCacheTimer < now && tempInfo.is_cached_data === false) {
         //GET NEW DATA FROM API
         tempInfo = await getTemp(city, day);
@@ -91,13 +101,13 @@ const getTempWithCache = async (city, day, useTestCacheDirs) => {
         
         //UPDATE CACHE
         tempInfo = JSON.stringify(tempInfo);
-        await fs.writeFileSync(cacheDir + '/tempCache.txt', tempInfo);
+        await fs.writeFileSync(cacheDir + '/' + city + '-' + day + '_TempCache.txt', tempInfo);
         tempInfo = JSON.parse(tempInfo);
-        console.log('Updated Temperature Info Cache!');
+        console.log('Updated ' + city + '-' + day + ' Temperature Info Cache!');
 
         //UPDATE CACHE TIMER
         tempCacheTimer = getNewCacheTimer(time, tempCacheTimer);
-        await fs.writeFileSync(cacheTimersDir + '/tempCacheTimer.txt', tempCacheTimer, 'utf-8');
+        await fs.writeFileSync(cacheTimersDir + '/' + city + '-' + day + '_TempCacheTimer.txt', tempCacheTimer, 'utf-8');
     }
 
     return tempInfo;
@@ -109,7 +119,7 @@ const getTempWithCache = async (city, day, useTestCacheDirs) => {
 const getWeather = async (city, day) => {
     let weatherInfo = {};
 
-    if (day > 5 || day < 0) {
+    if (day > 5 || day < 0 || day === null) {
         console.error("Given DayID must range between 0-5.");
         return;
     }
@@ -143,8 +153,8 @@ const getWeather = async (city, day) => {
 const getTemp = async (city, day) => {
     let tempInfo = {};
 
-    if (day > 5 || day < 0) {
-        console.error("DayID must range between 0-5.");
+    if (day > 5 || day < 0 || day === null) {
+        console.error("Given DayID must range between 0-5.");
         return;
     }
 
